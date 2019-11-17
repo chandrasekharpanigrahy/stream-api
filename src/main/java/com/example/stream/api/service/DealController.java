@@ -21,17 +21,19 @@ public class DealController {
     DealRepo repository;
 
     @PostMapping
-    List<String> save() {
-        Flux<String> stringFlux = Flux.just("sekhar", "panigrahy");
-        List<String> str = Collections.emptyList();
-        Flux<Deal> deal = stringFlux.map(it -> new Deal(null, it)).flatMap(repository::save);
-        log.info("current Data in repository", repository.findAll());
-        repository.deleteAll().thenMany(deal).thenMany(repository.findAll()).subscribe(log::info);
-        return str;
+    Flux<Deal> save() {
+        Flux<Deal> dealFlux = Flux.just(new Deal(null, "sekhar"), new Deal(null, "panigrahy"));
+        Flux<Deal> deal = dealFlux.flatMap(repository::save);
+        Flux<Deal> allDeal = repository.findAll();
+        log.info("current Data in repository", allDeal);
+        repository.deleteAll().thenMany(deal).thenMany(allDeal).subscribe(log::info);
+        log.info("current Data in repository after save", allDeal);
+        return allDeal;
     }
 
     @GetMapping(value = "/all")
     Flux get() {
+        log.info("current Data in repository", repository.findAll());
 
         /*return Flux.just(
                 new Deal(1, "Doe"),
