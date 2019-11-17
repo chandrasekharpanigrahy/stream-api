@@ -3,8 +3,8 @@ package com.example.stream.api.service;
 import com.example.stream.api.service.entity.Deal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,13 +19,12 @@ public class DealController {
     private final DealRepo dealRepo;
 
     @PostMapping
-    Publisher<Deal> save(@RequestBody Deal deal) {
+    Flux<Deal> save(@RequestBody Deal deal) {
         Mono<Deal> dealMono = Mono.just(deal);
-        dealMono.flatMap(dealRepo::save);
-        return dealRepo.findAll();
+        return dealMono.flatMap(dealRepo::save).thenMany(dealRepo.findAll());
     }
 
-    @GetMapping(value = "/all")
+    @GetMapping(value = "/all", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<Deal> get() {
         dealRepo.findAll().subscribe(log::info);
         return dealRepo.findAll();
